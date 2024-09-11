@@ -2,8 +2,9 @@ import path from "path";
 import fs from "fs";
 import yaml from "js-yaml";
 import { GetStaticProps } from "next";
+import { Post, postsDir } from "@/utils/posts";
 
-const postsDir = path.join(process.cwd(), "_posts/blog");
+type ClientPost = Omit<Post, "date"> & { date: string };
 
 export const getStaticPaths = async () => {
   if (!fs.existsSync(postsDir)) {
@@ -13,7 +14,7 @@ export const getStaticPaths = async () => {
   const postSlugs = fs.readdirSync(postsDir);
 
   return {
-    paths: postSlugs.map((slug) => slug.slice(0, -4)),
+    paths: postSlugs.map((slug) => ({ params: { slug: slug.slice(0, -4) } })),
     fallback: "blocking",
   };
 };
@@ -22,14 +23,19 @@ export const getStaticProps: GetStaticProps = async (context) => {
   const slug = context.params!.slug;
 
   const postPath = path.join(postsDir, `${slug}.yml`);
-  const postYml = fs.readFileSync(postPath, "utf-8");
-  const post = yaml.load(postYml);
+  const post = yaml.load(fs.readFileSync(postPath, "utf-8")) as Post;
 
-  return { props: { post } };
+  return { props: { post: { ...post, date: post.date.toLocaleString() } } };
 };
 
-const Page: React.FC<{ post: { title: string } }> = ({ post }) => {
-  return <div>{post.title}</div>;
+const Page: React.FC<{ post: ClientPost }> = ({ post }) => {
+  return (
+    <div>
+      <div>{post.title}</div>
+      <div>{post.date}</div>
+      <div>{post.body}</div>
+    </div>
+  );
 };
 
 export default Page;
