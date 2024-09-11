@@ -3,7 +3,7 @@ import fs from "fs";
 import yaml from "js-yaml";
 import { GetStaticProps } from "next";
 
-const postsDir = path.join(__dirname, "../../../_posts");
+const postsDir = path.join(process.cwd(), "_posts/blog");
 
 export const getStaticPaths = async () => {
   const postSlugs = fs.readdirSync(postsDir);
